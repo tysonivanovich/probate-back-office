@@ -10,6 +10,7 @@ import uk.gov.hmcts.probate.changerule.ApplicantSiblingsRule;
 import uk.gov.hmcts.probate.changerule.DiedOrNotApplyingRule;
 import uk.gov.hmcts.probate.changerule.EntitledMinorityRule;
 import uk.gov.hmcts.probate.changerule.ExecutorsRule;
+import uk.gov.hmcts.probate.changerule.ImmovableEstateRule;
 import uk.gov.hmcts.probate.changerule.LifeInterestRule;
 import uk.gov.hmcts.probate.changerule.MinorityInterestRule;
 import uk.gov.hmcts.probate.changerule.NoOriginalWillRule;
@@ -20,10 +21,13 @@ import uk.gov.hmcts.probate.changerule.SpouseOrCivilRule;
 import uk.gov.hmcts.probate.changerule.UpdateApplicationRule;
 import uk.gov.hmcts.probate.model.ExecutorsApplyingNotification;
 import uk.gov.hmcts.probate.model.ccd.raw.CollectionMember;
+import uk.gov.hmcts.probate.model.ccd.raw.DynamicList;
+import uk.gov.hmcts.probate.model.ccd.raw.DynamicListItem;
 import uk.gov.hmcts.probate.model.ccd.raw.request.CaseData;
 import uk.gov.hmcts.probate.transformer.CallbackResponseTransformer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +52,8 @@ public class StateChangeServiceTest {
     private EntitledMinorityRule entitledMinorityRule;
     @Mock
     private ExecutorsRule executorsStateRule;
+    @Mock
+    private ImmovableEstateRule immovableEstateRule;
     @Mock
     private LifeInterestRule lifeInterestRule;
     @Mock
@@ -90,7 +96,7 @@ public class StateChangeServiceTest {
         initMocks(this);
 
         underTest = new StateChangeService(applicantSiblingsRule, diedOrNotApplyingRule,
-                entitledMinorityRule, executorsStateRule, lifeInterestRule, minorityInterestRule, noOriginalWillRule,
+                entitledMinorityRule, executorsStateRule, immovableEstateRule, lifeInterestRule, minorityInterestRule, noOriginalWillRule,
                 renouncingRule, residuaryRule, solsExecutorRule,spouseOrCivilRule, updateApplicationRule, callbackResponseTransformer);
 
         execList = new ArrayList<>();
@@ -199,6 +205,44 @@ public class StateChangeServiceTest {
         when(executorsStateRule.isChangeNeeded(caseDataMock)).thenReturn(false);
 
         Optional<String> newState = underTest.getChangedStateForProbateUpdate(caseDataMock);
+
+        assertEquals(Optional.empty(), newState);
+    }
+
+    @Test
+    public void shouldChangeStateForImmovableEstateRuleIntestacyValid() {
+        when(immovableEstateRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+
+        Optional<String> newState = underTest.getChangedStateForIntestacyUpdate(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals("Stopped", newState.get());
+    }
+
+    @Test
+    public void shouldNOTChangeStateForImmovableEstateRuleIntestacy() {
+        when(immovableEstateRule.isChangeNeeded(caseDataMock)).thenReturn(false);
+
+        Optional<String> newState = underTest.getChangedStateForIntestacyUpdate(caseDataMock);
+
+        assertEquals(Optional.empty(), newState);
+    }
+
+    @Test
+        public void shouldChangeStateForImmovableEstateRuleAdmonValid() {
+        when(immovableEstateRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+
+        Optional<String> newState = underTest.getChangedStateForAdmonUpdate(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals("Stopped", newState.get());
+    }
+
+    @Test
+    public void shouldNOTChangeStateForImmovableEstateRuleAdmon() {
+        when(immovableEstateRule.isChangeNeeded(caseDataMock)).thenReturn(false);
+
+        Optional<String> newState = underTest.getChangedStateForAdmonUpdate(caseDataMock);
 
         assertEquals(Optional.empty(), newState);
     }
@@ -364,6 +408,66 @@ public class StateChangeServiceTest {
 
         assertTrue(newState.isPresent());
         assertEquals(STATE_GRANT_TYPE_CREATED, newState.get());
+    }
+
+    @Test
+    public void shouldChangeStateForCaseReviewOnSelectedLegalStatementChangeAsDeceasedDetails() {
+        when(updateApplicationRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+        DynamicListItem item = DynamicListItem.builder().code("SolAppCreated").label("label1").build();
+        DynamicListItem value = DynamicListItem.builder().code("SolAppCreated").label("label1").build();
+
+        DynamicList list = DynamicList.builder().listItems(Arrays.asList(item)).value(value).build();
+        when(caseDataMock.getSolsAmendLegalStatmentSelect()).thenReturn(list);
+
+        Optional<String> newState = underTest.getChangedStateForCaseReview(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals(STATE_GRANT_TYPE_CREATED, newState.get());
+    }
+
+    @Test
+    public void shouldChangeStateForCaseReviewOnSelectedLegalStatementChangeAsProbate() {
+        when(updateApplicationRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+        DynamicListItem item = DynamicListItem.builder().code("WillLeft").label("label1").build();
+        DynamicListItem value = DynamicListItem.builder().code("WillLeft").label("label1").build();
+
+        DynamicList list = DynamicList.builder().listItems(Arrays.asList(item)).value(value).build();
+        when(caseDataMock.getSolsAmendLegalStatmentSelect()).thenReturn(list);
+
+        Optional<String> newState = underTest.getChangedStateForCaseReview(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals(STATE_GRANT_TYPE_PROBATE, newState.get());
+    }
+
+    @Test
+    public void shouldChangeStateForCaseReviewOnSelectedLegalStatementChangeAsIntestacy() {
+        when(updateApplicationRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+        DynamicListItem item = DynamicListItem.builder().code("NoWill").label("label1").build();
+        DynamicListItem value = DynamicListItem.builder().code("NoWill").label("label1").build();
+
+        DynamicList list = DynamicList.builder().listItems(Arrays.asList(item)).value(value).build();
+        when(caseDataMock.getSolsAmendLegalStatmentSelect()).thenReturn(list);
+
+        Optional<String> newState = underTest.getChangedStateForCaseReview(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals(STATE_GRANT_TYPE_INTESTACY, newState.get());
+    }
+
+    @Test
+    public void shouldChangeStateForCaseReviewOnSelectedLegalStatementChangeAsAdmon() {
+        when(updateApplicationRule.isChangeNeeded(caseDataMock)).thenReturn(true);
+        DynamicListItem item = DynamicListItem.builder().code("WillLeftAnnexed").label("label1").build();
+        DynamicListItem value = DynamicListItem.builder().code("WillLeftAnnexed").label("label1").build();
+
+        DynamicList list = DynamicList.builder().listItems(Arrays.asList(item)).value(value).build();
+        when(caseDataMock.getSolsAmendLegalStatmentSelect()).thenReturn(list);
+
+        Optional<String> newState = underTest.getChangedStateForCaseReview(caseDataMock);
+
+        assertTrue(newState.isPresent());
+        assertEquals(STATE_GRANT_TYPE_ADMON, newState.get());
     }
 
     @Test
