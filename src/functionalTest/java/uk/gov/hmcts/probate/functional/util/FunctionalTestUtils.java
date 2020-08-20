@@ -1,10 +1,10 @@
 package uk.gov.hmcts.probate.functional.util;
 
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.http.Headers;
 import io.restassured.response.Response;
-import net.serenitybdd.rest.SerenityRest;
 import org.pdfbox.cos.COSDocument;
 import org.pdfbox.pdfparser.PDFParser;
 import org.pdfbox.pdmodel.PDDocument;
@@ -34,6 +34,12 @@ public class FunctionalTestUtils {
     private String userId;
 
     private String serviceToken;
+
+    @Value("${probate.caseworker.email")
+    private String caseworkerEmail;
+
+    @Value("${probate.caseworker.password")
+    private String caseworkerPassword;
 
     @PostConstruct
     public void init() {
@@ -83,11 +89,12 @@ public class FunctionalTestUtils {
         return Headers.headers(
                 new Header("ServiceAuthorization", serviceToken),
                 new Header("Content-Type", ContentType.JSON.toString()),
+                new Header("Authorization", serviceAuthTokenGenerator.generateAuthorisation(caseworkerEmail, caseworkerPassword)),
                 new Header("user-id", userId));
     }
 
     public String downloadPdfAndParseToString(String documentUrl) {
-        Response document = SerenityRest.given()
+        Response document = RestAssured.given()
                 .relaxedHTTPSValidation()
                 .headers(getHeadersWithUserId())
                 .when().get(documentUrl).andReturn();

@@ -109,6 +109,7 @@ public class PDFManagementService {
     private Document generateAndUpload(String json, DocumentType documentType) {
         log.info("Generating pdf for template {}", documentType.getTemplateName());
         EvidenceManagementFileUpload fileUpload = pdfGeneratorService.generatePdf(documentType, json);
+        log.info("Got the ", documentType.getTemplateName());
         return uploadDocument(documentType, fileUpload);
     }
 
@@ -131,6 +132,7 @@ public class PDFManagementService {
                     .build();
 
             return Document.builder()
+                    .documentFileName(fileUpload.getFileName())
                     .documentLink(documentLink)
                     .documentType(documentType)
                     .documentDateAdded(LocalDate.now())

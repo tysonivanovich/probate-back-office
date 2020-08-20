@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import uk.gov.hmcts.probate.insights.AppInsights;
 import uk.gov.hmcts.probate.model.ocr.OCRField;
-import uk.gov.hmcts.probate.service.ocr.OCRMapper;
+import uk.gov.hmcts.probate.service.ocr.OCRPopulatedValueMapper;
 import uk.gov.hmcts.probate.service.ocr.OCRToCCDMandatoryField;
 import uk.gov.hmcts.probate.util.TestUtils;
 
@@ -49,7 +49,7 @@ public class OCRFormsControllerTest {
     private TestUtils testUtils;
 
     @MockBean
-    private OCRMapper ocrMapper;
+    private OCRPopulatedValueMapper ocrPopulatedValueMapper;
 
     @MockBean
     private OCRToCCDMandatoryField ocrToCCDMandatoryField;
@@ -68,13 +68,13 @@ public class OCRFormsControllerTest {
                 .description("Deceased forename").build();
         ocrFields.add(field1);
         warnings.add("test warning");
-        when(ocrMapper.ocrMapper(any())).thenReturn(ocrFields);
+        when(ocrPopulatedValueMapper.ocrPopulatedValueMapper(any())).thenReturn(ocrFields);
         when(ocrToCCDMandatoryField.ocrToCCDMandatoryFields(eq(ocrFields), any())).thenReturn(EMPTY_LIST);
     }
 
     @Test
     public void testNoWarningsReturnOkResponseAndSuccessResponseStateForPA1P() throws Exception {
-        mockMvc.perform(post("/forms/PA1P/validate-ocr-data")
+        mockMvc.perform(post("/forms/PA1P/validate-ocr")
                 .content(ocrPayload)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -83,8 +83,8 @@ public class OCRFormsControllerTest {
 
     @Test
     public void testWarningsPopulateListAndReturnOkWithWarningsResponseState() throws Exception {
-        when(ocrToCCDMandatoryField.ocrToCCDMandatoryFields(any(), any())).thenReturn(warnings);
-        mockMvc.perform(post("/forms/PA1P/validate-ocr-data")
+        when(ocrToCCDMandatoryField.ocrToCCDNonMandatoryWarnings(any(), any())).thenReturn(warnings);
+        mockMvc.perform(post("/forms/PA1P/validate-ocr")
                 .content(ocrPayload)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -94,7 +94,7 @@ public class OCRFormsControllerTest {
 
     @Test
     public void testNoWarningsReturnOkResponseAndSuccessResponseStateForPA1A() throws Exception {
-        mockMvc.perform(post("/forms/PA1A/validate-ocr-data")
+        mockMvc.perform(post("/forms/PA1A/validate-ocr")
                 .content(ocrPayload)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ public class OCRFormsControllerTest {
 
     @Test
     public void testNoWarningsReturnOkResponseAndSuccessResponseStateForPA8A() throws Exception {
-        mockMvc.perform(post("/forms/PA8A/validate-ocr-data")
+        mockMvc.perform(post("/forms/PA8A/validate-ocr")
                 .content(ocrPayload)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -112,7 +112,7 @@ public class OCRFormsControllerTest {
 
     @Test
     public void testInvalidFormTypeThrowsNotFound() throws Exception {
-        mockMvc.perform(post("/forms/test/validate-ocr-data")
+        mockMvc.perform(post("/forms/test/validate-ocr")
                 .content(ocrPayload)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError())

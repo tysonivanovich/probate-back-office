@@ -40,7 +40,13 @@
       "feeForNonUkCopies":1,
       "applicationFee":155,
       "totalFee":156,
-      "solsSOTName": "TestSOTName",
+      "solsSOTName": "Solicitor_fn Solicitor_ln",
+      "solsSOTForenames": "Solicitor_fn",
+      "solsSOTSurname": "Solicitor_ln",
+      "solsSolicitorIsExec": "No",
+      "solsSolicitorIsMainApplicant": null,
+      "solsSolicitorIsApplying": null,
+      "solsSolicitorNotApplyingReason": null,
       "solsSOTJobTitle": "TestSOTJobTitle",
       "deceasedDateOfBirth": "1987-01-01",
       "solsDeceasedAliasNamesList": [
@@ -72,6 +78,16 @@
         "AddressLine2": "2",
         "AddressLine3": "2"
       },
+      "applicationGrounds": "Grounds for application",
+      "ukEstate": [
+        {
+          "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+          "value": {
+            "item": "item1",
+            "value": "1000"
+          }
+        }
+      ],
       "deceasedDomicileInEngWales": "Yes",
       "outsideUKGrantCopies":1,
       "solsPaymentMethods":"cheque",
@@ -124,7 +140,6 @@
       "primaryApplicantIsApplying": "Yes",
       "solsCYANeedToUpdate": "No",
       "primaryApplicantHasAlias": "Yes",
-      "solsPaymentReferenceNumber": "Cheque (payable to ‘HM Courts & Tribunals Service’)",
       "ihtGrossValue": "100001",
       "ihtFormId": "IHT205",
       "solsExecutorAliasNames": "TestPrimaryExecutorAliasName",
@@ -162,6 +177,13 @@
       "willAccessOriginal": "PUBLIC",
       "willExists": "PUBLIC",
       "solsWillType": "PUBLIC",
+      "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "solsApplicantRelationshipToDeceased": "PUBLIC",
       "solsSpouseOrCivilRenouncing": "PUBLIC",
       "solsAdoptedEnglandOrWales": "PUBLIC",
@@ -182,6 +204,19 @@
           "AddressLine2": "PUBLIC",
           "AddressLine3": "PUBLIC"
         }
+      },
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
       },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
@@ -237,7 +272,6 @@
       "primaryApplicantIsApplying": "PUBLIC",
       "solsCYANeedToUpdate": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "solsExecutorAliasNames": "PUBLIC",
@@ -278,6 +312,13 @@
       "willAccessOriginal": "PUBLIC",
       "willExists": "PUBLIC",
       "solsWillType": "PUBLIC",
+      "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "solsApplicantRelationshipToDeceased": "PUBLIC",
       "solsSpouseOrCivilRenouncing": "PUBLIC",
       "solsAdoptedEnglandOrWales": "PUBLIC",
@@ -298,6 +339,19 @@
           "AddressLine2": "PUBLIC",
           "AddressLine3": "PUBLIC"
         }
+      },
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
       },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
@@ -353,7 +407,6 @@
       "primaryApplicantIsApplying": "PUBLIC",
       "solsCYANeedToUpdate": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "solsExecutorAliasNames": "PUBLIC",
@@ -410,6 +463,13 @@
       "willAccessOriginal": "Yes",
       "willExists": "Yes",
       "solsWillType": "WillLeft",
+      "solsSOTName": "Solicitor_fn Solicitor_ln",
+      "solsSOTForenames": "Solicitor_fn",
+      "solsSOTSurname": "Solicitor_ln",
+      "solsSolicitorIsExec": "No",
+      "solsSolicitorIsMainApplicant": null,
+      "solsSolicitorIsApplying": null,
+      "solsSolicitorNotApplyingReason": null,
       "solsApplicantRelationshipToDeceased": null,
       "solsSpouseOrCivilRenouncing": null,
       "solsAdoptedEnglandOrWales": null,
@@ -427,6 +487,16 @@
         "AddressLine2": "2",
         "AddressLine3": "2"
       },
+      "applicationGrounds": "Grounds for application",
+      "ukEstate": [
+        {
+          "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+          "value": {
+            "item": "item1",
+            "value": "1000"
+          }
+        }
+      ],
       "deceasedDomicileInEngWales": "Yes",
       "ihtNetValue": "90009",
       "deceasedSurname": "deceasedLastName",
@@ -473,7 +543,6 @@
       "willNumberOfCodicils": "2",
       "primaryApplicantIsApplying": "Yes",
       "primaryApplicantHasAlias": "Yes",
-      "solsPaymentReferenceNumber": "Cheque (payable to ‘HM Courts & Tribunals Service’)",
       "ihtGrossValue": "100001",
       "ihtFormId": "IHT205",
       "solsExecutorAliasNames": "ex1wn",
@@ -511,6 +580,13 @@
       "willAccessOriginal": "PUBLIC",
       "willExists": "PUBLIC",
       "solsWillType": "PUBLIC",
+      "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "solsApplicantRelationshipToDeceased": "PUBLIC",
       "solsSpouseOrCivilRenouncing": "PUBLIC",
       "solsAdoptedEnglandOrWales": "PUBLIC",
@@ -530,6 +606,19 @@
           "AddressLine3": "PUBLIC"
         },
         "classification": "PUBLIC"
+      },
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
       },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
@@ -584,7 +673,6 @@
       "willNumberOfCodicils": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "solsExecutorAliasNames": "PUBLIC",
@@ -625,6 +713,13 @@
       "willAccessOriginal": "PUBLIC",
       "willExists": "PUBLIC",
       "solsWillType": "PUBLIC",
+      "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "solsApplicantRelationshipToDeceased": "PUBLIC",
       "solsSpouseOrCivilRenouncing": "PUBLIC",
       "solsAdoptedEnglandOrWales": "PUBLIC",
@@ -644,6 +739,19 @@
           "AddressLine3": "PUBLIC"
         },
         "classification": "PUBLIC"
+      },
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
       },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
@@ -698,7 +806,6 @@
       "willNumberOfCodicils": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "solsExecutorAliasNames": "PUBLIC",

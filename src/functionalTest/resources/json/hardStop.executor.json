@@ -7,6 +7,7 @@
     "last_modified": null,
     "security_classification": "PUBLIC",
     "case_data": {
+      "applicationGrounds": "Grounds for application",
       "otherExecutorExists": "No",
       "deceasedAddress": {
         "AddressLine1": "1",
@@ -34,6 +35,13 @@
       "solsSolicitorFirmName": "firmname",
       "willExists": "Yes",
       "solsWillType": "WillLeft",
+      "solsSOTName": "Solicitor_fn Solicitor_ln",
+      "solsSOTForenames": "Solicitor_fn",
+      "solsSOTSurname": "Solicitor_ln",
+      "solsSolicitorIsExec": "No",
+      "solsSolicitorIsMainApplicant": null,
+      "solsSolicitorIsApplying": null,
+      "solsSolicitorNotApplyingReason": null,
       "solsApplicantRelationshipToDeceased": null,
       "solsSpouseOrCivilRenouncing": null,
       "solsAdoptedEnglandOrWales": null,

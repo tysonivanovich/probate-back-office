@@ -37,11 +37,28 @@ public class DocumentTransformer {
             case ADMON_WILL_GRANT:
             case ADMON_WILL_GRANT_REISSUE_DRAFT:
             case ADMON_WILL_GRANT_REISSUE:
+            case SOT_INFORMATION_REQUEST:
             case GRANT_COVER:
+            case ASSEMBLED_LETTER:
+            case WELSH_DIGITAL_GRANT_DRAFT:
+            case WELSH_DIGITAL_GRANT:
+            case WELSH_ADMON_WILL_GRANT_DRAFT:
+            case WELSH_ADMON_WILL_GRANT:
+            case WELSH_INTESTACY_GRANT_DRAFT:
+            case WELSH_INTESTACY_GRANT:
                 callbackRequest.getCaseDetails().getData().getProbateDocumentsGenerated()
                         .add(new CollectionMember<>(null, document));
                 break;
+            case STATEMENT_OF_TRUTH:
+            case WELSH_STATEMENT_OF_TRUTH:
+            case LEGAL_STATEMENT_PROBATE:
+            case LEGAL_STATEMENT_INTESTACY:
+            case LEGAL_STATEMENT_ADMON:
+                callbackRequest.getCaseDetails().getData().getProbateSotDocumentsGenerated()
+                        .add(new CollectionMember<>(null, document));
+                break;
             case SENT_EMAIL:
+            case GRANT_RAISED:
             case CAVEAT_STOPPED:
                 callbackRequest.getCaseDetails().getData().getProbateNotificationsGenerated()
                         .add(new CollectionMember<>(null, document));
@@ -65,6 +82,8 @@ public class DocumentTransformer {
         switch (document.getDocumentType()) {
             case CAVEAT_COVERSHEET:
             case CAVEAT_RAISED:
+            case CAVEAT_EXTENDED:
+            case CAVEAT_WITHDRAWN:
             case SENT_EMAIL:
                 caveatCallbackRequest.getCaseDetails().getData().getNotificationsGenerated()
                         .add(new CollectionMember<>(null, document));

@@ -1,9 +1,10 @@
 package uk.gov.hmcts.probate.service;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.probate.model.ccd.ProbateAddress;
+import uk.gov.hmcts.probate.model.ccd.raw.SolsAddress;
 
 @Service
 @AllArgsConstructor
@@ -20,6 +21,22 @@ public class AddressFormatterService {
             fullAddress += checkEmpty(true, address.getProCounty());
             fullAddress += checkEmpty(true, address.getProPostCode());
             fullAddress += checkEmpty(true, address.getProCountry());
+        }
+
+        return fullAddress;
+    }
+
+    public String formatSolsAddress(SolsAddress address) {
+        String fullAddress = "";
+
+        if (address != null) {
+            fullAddress += checkEmpty(false, address.getAddressLine1());
+            fullAddress += checkEmpty(true, address.getAddressLine2());
+            fullAddress += checkEmpty(true, address.getAddressLine3());
+            fullAddress += checkEmpty(true, address.getPostTown());
+            fullAddress += checkEmpty(true, address.getCounty());
+            fullAddress += checkEmpty(true, address.getPostCode());
+            fullAddress += checkEmpty(true, address.getCountry());
         }
 
         return fullAddress;

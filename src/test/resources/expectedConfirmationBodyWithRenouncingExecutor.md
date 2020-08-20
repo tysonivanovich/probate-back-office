@@ -24,7 +24,7 @@ Payment summary
 
 **Payment method** Cheque
 
-**Payment reference number** XXXXX123456
+**Payment reference number** Cheque (payable to 'HM Courts & Tribunals Service')
 
 Notes for this application
 -------------------------------------------------
@@ -43,6 +43,7 @@ You now need to send us:
 *   the printed version of this page which will be used as your cover letter to us
 *   completed inheritance tax form IHT207
 *   renunciation form for Tim Smith
+*   a photocopy of the signed legal statement and declaration
 
 Where to send us your documents
 -------------------------------
@@ -51,6 +52,7 @@ You should:
 
 *   use recorded delivery
 *   keep copies of all documents
+*   if you are providing a notarial copy or a court sealed copy of the will please also provide a cover letter with the application indicating where the original will is and why it cannot be released. 
 
 Send all documents to:
 

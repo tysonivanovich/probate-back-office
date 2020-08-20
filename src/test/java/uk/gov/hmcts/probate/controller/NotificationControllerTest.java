@@ -1,5 +1,6 @@
 package uk.gov.hmcts.probate.controller;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,29 +16,44 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import uk.gov.hmcts.probate.exception.BadRequestException;
 import uk.gov.hmcts.probate.insights.AppInsights;
+import uk.gov.hmcts.probate.model.DocumentIssueType;
+import uk.gov.hmcts.probate.model.DocumentStatus;
+import uk.gov.hmcts.probate.model.DocumentType;
+import uk.gov.hmcts.probate.model.GrantScheduleResponse;
 import uk.gov.hmcts.probate.model.ccd.raw.Document;
+import uk.gov.hmcts.probate.model.ccd.raw.DocumentLink;
 import uk.gov.hmcts.probate.model.ccd.raw.request.CallbackRequest;
 import uk.gov.hmcts.probate.model.ccd.raw.response.CallbackResponse;
+import uk.gov.hmcts.probate.model.ccd.raw.response.ResponseCaseData;
 import uk.gov.hmcts.probate.service.BulkPrintService;
+import uk.gov.hmcts.probate.service.DocumentGeneratorService;
 import uk.gov.hmcts.probate.service.DocumentService;
 import uk.gov.hmcts.probate.service.EventValidationService;
+import uk.gov.hmcts.probate.service.GrantNotificationService;
+import uk.gov.hmcts.probate.service.InformationRequestService;
 import uk.gov.hmcts.probate.service.NotificationService;
+import uk.gov.hmcts.probate.service.RedeclarationNotificationService;
 import uk.gov.hmcts.probate.service.docmosis.GrantOfRepresentationDocmosisMapperService;
 import uk.gov.hmcts.probate.service.template.pdf.PDFManagementService;
+import uk.gov.hmcts.probate.transformer.CallbackResponseTransformer;
 import uk.gov.hmcts.probate.util.TestUtils;
 import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.service.notify.NotificationClientException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,11 +65,12 @@ import static uk.gov.hmcts.probate.model.DocumentType.ADMON_WILL_GRANT_DRAFT;
 import static uk.gov.hmcts.probate.model.DocumentType.CAVEAT_STOPPED;
 import static uk.gov.hmcts.probate.model.DocumentType.DIGITAL_GRANT;
 import static uk.gov.hmcts.probate.model.DocumentType.DIGITAL_GRANT_DRAFT;
+import static uk.gov.hmcts.probate.model.DocumentType.EDGE_CASE;
 import static uk.gov.hmcts.probate.model.DocumentType.GRANT_COVER;
 import static uk.gov.hmcts.probate.model.DocumentType.GRANT_COVERSHEET;
+import static uk.gov.hmcts.probate.model.DocumentType.GRANT_RAISED;
 import static uk.gov.hmcts.probate.model.DocumentType.INTESTACY_GRANT;
 import static uk.gov.hmcts.probate.model.DocumentType.INTESTACY_GRANT_DRAFT;
-import static uk.gov.hmcts.probate.model.DocumentType.EDGE_CASE;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -88,25 +105,59 @@ public class NotificationControllerTest {
     @MockBean
     private CoreCaseDataApi coreCaseDataApi;
 
+    @MockBean
+    private CallbackResponseTransformer callbackResponseTransformer;
+
+    @MockBean
+    private DocumentGeneratorService documentGeneratorService;
+
+    @MockBean
+    private InformationRequestService informationRequestService;
+
+    @MockBean
+    private RedeclarationNotificationService redeclarationNotificationService;
+
+    @MockBean
+    private GrantNotificationService grantNotificationService;
+
     @SpyBean
     private DocumentService documentService;
 
     private static final String DOC_RECEIVED_URL = "/notify/documents-received";
     private static final String CASE_STOPPED_URL = "/notify/case-stopped";
+    private static final String REQUEST_INFO_DEFAULT_URL = "/notify/request-information-default-values";
+    private static final String REQUEST_INFO_URL = "/notify/stopped-information-request";
+    private static final String REDECLARATION_SOT = "/notify/redeclaration-sot";
+    private static final String RAISE_GRANT = "/notify/grant-received";
+    private static final String APPLICATION_RECEIVED_URL = "/notify/application-received";
+    private static final String GRANT_DELAYED = "/notify/grant-delayed-scheduled?date=aDate";
+    private static final String GRANT_AWAITING_DOCS = "/notify/grant-awaiting-documents-scheduled?date=aDate";
+    private static final String START_GRANT_DELAYED_NOTIFICATION_DATE = "/notify/start-grant-delayed-notify-period";
 
     private static final Map<String, Object> EMPTY_MAP = new HashMap();
     private static final Document EMPTY_DOC = Document.builder().documentType(CAVEAT_STOPPED).build();
 
     private List<String> errors = new ArrayList<>();
     private CallbackResponse errorResponse;
+    private CallbackResponse successfulResponse;
 
     @Before
     public void setUp() throws NotificationClientException, BadRequestException {
         errors.add("Bulk Print is currently unavailable please contact support desk.");
         errorResponse = CallbackResponse.builder().errors(errors).build();
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        successfulResponse =
+                CallbackResponse.builder().data(ResponseCaseData.builder().deceasedForenames("Bob").build()).build();
+        List<Document> docList = new ArrayList<>();
+        docList.add(EMPTY_DOC);
 
-        Document document = Document.builder().documentType(DIGITAL_GRANT).build();
+        Document document = Document.builder()
+            .documentDateAdded(LocalDate.now())
+            .documentFileName("fileName")
+            .documentGeneratedBy("generatedBy")
+            .documentLink(DocumentLink.builder().documentUrl("url").documentFilename("file").documentBinaryUrl("binary").build())
+            .documentType(DocumentType.DIGITAL_GRANT)
+            .build();
 
         doReturn(document).when(notificationService).sendEmail(any(), any());
 
@@ -138,6 +189,19 @@ public class NotificationControllerTest {
 
         when(pdfManagementService.generateDocmosisDocumentAndUpload(any(), eq(CAVEAT_STOPPED))).thenReturn(EMPTY_DOC);
 
+        when(documentGeneratorService.generateCoversheet(any())).thenReturn(EMPTY_DOC);
+
+        when(callbackResponseTransformer.addDocuments(any(), any(), any(), any())).thenReturn(successfulResponse);
+        when(callbackResponseTransformer.caseStopped(any(), any(), any())).thenReturn(successfulResponse);
+        when(callbackResponseTransformer.defaultRequestInformationValues(any())).thenReturn(successfulResponse);
+        when(callbackResponseTransformer.addInformationRequestDocuments(any(), eq(docList), any())).thenReturn(successfulResponse);
+        when(callbackResponseTransformer.addInformationRequestDocuments(any(), eq(new ArrayList<>()), any())).thenReturn(successfulResponse);
+        when(callbackResponseTransformer.grantRaised(any(), any(), any())).thenReturn(successfulResponse);
+
+        when(informationRequestService.handleInformationRequest(any())).thenReturn(successfulResponse);
+
+        when(redeclarationNotificationService.handleRedeclarationNotification(any())).thenReturn(successfulResponse);
+
     }
 
     @Test
@@ -165,7 +229,33 @@ public class NotificationControllerTest {
     }
 
     @Test
+    public void personalApplicationReceivedShouldReturnDataPayloadOkResponseCode() throws Exception {
+
+        String solicitorPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+
+        mockMvc.perform(post("/notify/application-received")
+                .content(solicitorPayload)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("generatedBy")));
+    }
+
+    @Test
+    public void personalApplicationReceivedForPaperShouldReturnDataEmptyResponse() throws Exception {
+
+        String solicitorPayload = testUtils.getStringFromFile("personalPayloadNotificationsPaper.json");
+
+        mockMvc.perform(post("/notify/application-received")
+            .content(solicitorPayload)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().string(""));
+    }
+
+    @Test
     public void solicitorGrantIssuedShouldReturnDataPayloadOkResponseCode() throws Exception {
+        when(documentGeneratorService.getDocument(any(CallbackRequest.class),  eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT)))
+                .thenReturn(Document.builder().documentType(DIGITAL_GRANT).build());
 
         String solicitorPayload = testUtils.getStringFromFile("solicitorPayloadNotifications.json");
 
@@ -175,11 +265,13 @@ public class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data")));
 
-        verify(documentService).expire(any(CallbackRequest.class), eq(DIGITAL_GRANT_DRAFT));
+        verify(documentGeneratorService).getDocument(any(CallbackRequest.class), eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT));
     }
 
     @Test
     public void solicitorAdmonWillGrantIssuedShouldReturnDataPayloadOkResponseCode() throws Exception {
+        when(documentGeneratorService.getDocument(any(CallbackRequest.class),  eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT)))
+                .thenReturn(Document.builder().documentType(DIGITAL_GRANT).build());
 
         String solicitorPayload = testUtils.getStringFromFile("solicitorPayloadNotificationsAdmonWill.json");
 
@@ -189,11 +281,13 @@ public class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data")));
 
-        verify(documentService).expire(any(CallbackRequest.class), eq(DIGITAL_GRANT_DRAFT));
+        verify(documentGeneratorService).getDocument(any(CallbackRequest.class), eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT));
     }
 
     @Test
     public void solicitorIntestacyGrantIssuedShouldReturnDataPayloadOkResponseCode() throws Exception {
+        when(documentGeneratorService.getDocument(any(CallbackRequest.class),  eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT)))
+                .thenReturn(Document.builder().documentType(DIGITAL_GRANT).build());
 
         String solicitorPayload = testUtils.getStringFromFile("solicitorPayloadNotificationsIntestacy.json");
 
@@ -203,11 +297,13 @@ public class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data")));
 
-        verify(documentService).expire(any(CallbackRequest.class), eq(DIGITAL_GRANT_DRAFT));
+        verify(documentGeneratorService).getDocument(any(CallbackRequest.class), eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT));
     }
 
     @Test
     public void solicitorEdgeCaseGrantIssuedShouldReturnDataPayloadOkResponseCode() throws Exception {
+        when(documentGeneratorService.getDocument(any(CallbackRequest.class),  eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT)))
+                .thenReturn(Document.builder().documentType(DIGITAL_GRANT).build());
 
         String solicitorPayload = testUtils.getStringFromFile("solicitorPayloadNotificationsEdgeCase.json");
 
@@ -217,11 +313,13 @@ public class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data")));
 
-        verify(documentService).expire(any(CallbackRequest.class), eq(DIGITAL_GRANT_DRAFT));
+        verify(documentGeneratorService).getDocument(any(CallbackRequest.class), eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT));
     }
 
     @Test
     public void personalGrantIssuedShouldReturnDataPayloadOkResponseCode() throws Exception {
+        when(documentGeneratorService.getDocument(any(CallbackRequest.class),  eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT)))
+                .thenReturn(Document.builder().documentType(DIGITAL_GRANT).build());
 
         String solicitorPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
 
@@ -231,7 +329,7 @@ public class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data")));
 
-        verify(documentService).expire(any(CallbackRequest.class), eq(DIGITAL_GRANT_DRAFT));
+        verify(documentGeneratorService).getDocument(any(CallbackRequest.class), eq(DocumentStatus.FINAL), eq(DocumentIssueType.GRANT));
     }
 
     @Test
@@ -283,7 +381,7 @@ public class NotificationControllerTest {
 
     @Test
     public void caseStoppedWithNoEmailNotificationRequestedShouldReturnBulkPrintError() throws Exception {
-        when(bulkPrintService.sendToBulkPrint(any(CallbackRequest.class), eq(Document.builder().build()), eq(Document
+        when(bulkPrintService.sendToBulkPrintForGrant(any(CallbackRequest.class), eq(Document.builder().build()), eq(Document
                 .builder().build()))).thenReturn(null);
         String solicitorPayload = testUtils.getStringFromFile("stopNotificationNoEmailRequested.json");
 
@@ -327,6 +425,15 @@ public class NotificationControllerTest {
     }
 
     @Test
+    public void shouldReturnEmailPAValidateFromBulkScanSuccessful() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotificationsFromBulkScan.json");
+
+        mockMvc.perform(post(DOC_RECEIVED_URL).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
+    }
+
+    @Test
     public void shouldReturnEmailPAValidateUnSuccessful() throws Exception {
         String personalPayload = testUtils.getStringFromFile("personalPayloadNotificationsNoEmail.json");
 
@@ -340,18 +447,13 @@ public class NotificationControllerTest {
     }
 
     @Test
-    public void shouldReturnGrantPAValidateUnSuccessfulCaseStopped() throws Exception {
+    public void shouldReturnPAApplicantReceivedValidateUnSuccessfulCaseStopped() throws Exception {
         String personalPayload = testUtils.getStringFromFile("personalPayloadNotificationsNoEmail.json");
 
-        mockMvc.perform(post("/notify/documents-received")
+        mockMvc.perform(post("/notify/application-received")
                 .content(personalPayload)
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.errors[0]")
-                        .value("There is no email address for this applicant. "
-                                + "To continue the application, go back and select no to sending an email."))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
-
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -396,4 +498,85 @@ public class NotificationControllerTest {
 
     }
 
+    @Test
+    public void shouldReturnSuccessfulForRequestInformationDefaultValues() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+
+        mockMvc.perform(post(REQUEST_INFO_DEFAULT_URL).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
+
+    }
+
+    @Test
+    public void shouldReturnSuccessfulResponseForInformationRequest() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+
+        mockMvc.perform(post(REQUEST_INFO_URL).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().string(containsString("data")));
+    }
+
+    @Test
+    public void shouldReturnSuccessfulResponseForRedeclarationSot() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+
+        mockMvc.perform(post(REDECLARATION_SOT).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().string(containsString("data")));
+    }
+    
+    @Test
+    public void shouldReturnSuccessfulResponseFoRaiseGrant() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+        Document raiseGrantDoc = Document.builder().documentType(GRANT_RAISED).build();
+        doReturn(raiseGrantDoc).when(notificationService).sendEmail(any(), any());
+
+        mockMvc.perform(post(RAISE_GRANT).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().string(containsString("data")));
+    }
+
+    @Test
+    public void shouldReturnSuccessfulResponseFoRaiseGrantWithoutEmail() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotificationsNoEmail.json");
+        Document raiseGrantDoc = Document.builder().documentType(GRANT_RAISED).build();
+        doReturn(raiseGrantDoc).when(notificationService).sendEmail(any(), any());
+
+        mockMvc.perform(post(RAISE_GRANT).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().string(containsString("data")));
+    }
+
+    @Test
+    public void shouldReturnSuccessfulResponseForStartGrantDelayNotification() throws Exception {
+        String personalPayload = testUtils.getStringFromFile("personalPayloadNotifications.json");
+        when(callbackResponseTransformer.transformCase(any())).thenReturn(successfulResponse);
+        mockMvc.perform(post(START_GRANT_DELAYED_NOTIFICATION_DATE).content(personalPayload).contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().string(containsString("data")));
+        verify(notificationService).startGrantDelayNotificationPeriod(any());
+        verify(notificationService).resetAwaitingDocumentationNotificationDate(any());
+    }
+
+    @Test
+    public void shouldReturnSuccessfulResponseForGrantDelayed() throws Exception {
+        GrantScheduleResponse response = GrantScheduleResponse.builder().scheduleResponseData(Arrays.asList("returnString")).build();
+        when(grantNotificationService.handleGrantDelayedNotification("aDate")).thenReturn(response);
+        mockMvc.perform(post(GRANT_DELAYED).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+    
+    @Test
+    public void shouldReturnSuccessfulResponseForGrantAwaitingDocs() throws Exception {
+        GrantScheduleResponse response = GrantScheduleResponse.builder().scheduleResponseData(Arrays.asList("returnString")).build();
+        when(grantNotificationService.handleAwaitingDocumentationNotification("aDate")).thenReturn(response);
+        mockMvc.perform(post(GRANT_AWAITING_DOCS).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
 }

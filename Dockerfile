@@ -1,10 +1,9 @@
-ARG APP_INSIGHTS_AGENT_VERSION=2.3.1
-FROM hmctspublic.azurecr.io/base/java:openjdk-8-distroless-1.0
-# Mandatory!
-ENV APP back-office.jar
+ARG APP_INSIGHTS_AGENT_VERSION=2.5.1
+FROM hmctspublic.azurecr.io/base/java:openjdk-11-distroless-1.4
+LABEL maintainer="https://github.com/hmcts/probate-back-office"
 
-COPY build/libs/$APP /opt/app/
-COPY lib/applicationinsights-agent-2.3.1.jar lib/AI-Agent.xml /opt/app/
+COPY lib/AI-Agent.xml /opt/app/
+COPY build/libs/back-office.jar /opt/app/
 
 EXPOSE 4104
 

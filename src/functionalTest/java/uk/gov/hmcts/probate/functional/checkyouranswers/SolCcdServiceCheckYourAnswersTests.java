@@ -3,7 +3,8 @@ package uk.gov.hmcts.probate.functional.checkyouranswers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
-import net.serenitybdd.junit.runners.SerenityRunner;
+import net.serenitybdd.junit.spring.integration.SpringIntegrationSerenityRunner;
+import net.thucydides.core.annotations.Pending;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.pdfbox.pdmodel.PDDocument;
@@ -15,10 +16,10 @@ import java.io.IOException;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static net.serenitybdd.rest.SerenityRest.given;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static io.restassured.RestAssured.given;
 
-@RunWith(SerenityRunner.class)
+@RunWith(SpringIntegrationSerenityRunner.class)
 public class SolCcdServiceCheckYourAnswersTests extends IntegrationTestBase {
 
     private static final String VALIDATE_URL = "/case/sols-validate";
@@ -103,13 +104,13 @@ public class SolCcdServiceCheckYourAnswersTests extends IntegrationTestBase {
         validatePostRequestSuccessForLegalStatement("AdditionalExecutor1 willname");
     }
 
-//     @Test
-//     public void verifyIncorrectInputReturns400() {
-//         given().relaxedHTTPSValidation()
-//                 .headers(utils.getHeaders())
-//                 .body(utils.getJsonFromFile("incorrectInput.checkYourAnswersPayload.json")).
-//                 when().post("VALIDATE_URL").then().statusCode(400);
-//     }
+    @Test
+    public void verifyIncorrectInputReturns400() {
+        given().relaxedHTTPSValidation()
+                .headers(utils.getHeaders())
+                .body(utils.getJsonFromFile("incorrectInput.checkYourAnswersPayload.json"))
+                .when().post(VALIDATE_URL).then().statusCode(400);
+    }
 
     @Test
     public void verifyEmptyFirstNameReturnsError() {
@@ -149,7 +150,7 @@ public class SolCcdServiceCheckYourAnswersTests extends IntegrationTestBase {
                 .body(utils.getJsonFromFile("success.stateChange.checkYourAnswersPayload.json"))
                 .when().post("/nextsteps/validate")
                 .then().statusCode(200)
-                .and().body("data.state", equalToIgnoringCase("SolProbateCreated"));
+                .and().body("data.state", equalToIgnoringCase("SolAppCreated"));
     }
 
     @Test
@@ -159,7 +160,7 @@ public class SolCcdServiceCheckYourAnswersTests extends IntegrationTestBase {
                 .body(utils.getJsonFromFile("success.stateChange.beforeSOTcheckYourAnswersPayload.json"))
                 .when().post("/nextsteps/validate")
                 .then().statusCode(200)
-                .and().body("data.state", equalToIgnoringCase("SolProbateCreated"));
+                .and().body("data.state", equalToIgnoringCase("SolAppCreated"));
     }
 
     private String replaceString(String oldJson, String newJson) {

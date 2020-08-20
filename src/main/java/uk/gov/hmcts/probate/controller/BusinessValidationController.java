@@ -18,7 +18,6 @@ import uk.gov.hmcts.probate.controller.validation.ApplicationCreatedGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationIntestacyGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationProbateGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationUpdatedGroup;
-
 import uk.gov.hmcts.probate.exception.BadRequestException;
 import uk.gov.hmcts.probate.model.DocumentType;
 import uk.gov.hmcts.probate.model.ccd.raw.Document;
@@ -27,11 +26,14 @@ import uk.gov.hmcts.probate.model.ccd.raw.response.AfterSubmitCallbackResponse;
 import uk.gov.hmcts.probate.model.ccd.raw.response.CallbackResponse;
 import uk.gov.hmcts.probate.service.ConfirmationResponseService;
 import uk.gov.hmcts.probate.service.EventValidationService;
+import uk.gov.hmcts.probate.service.CaseStoppedService;
+import uk.gov.hmcts.probate.service.NotificationService;
 import uk.gov.hmcts.probate.service.StateChangeService;
 import uk.gov.hmcts.probate.service.template.pdf.PDFManagementService;
 import uk.gov.hmcts.probate.transformer.CallbackResponseTransformer;
 import uk.gov.hmcts.probate.validator.CaseworkerAmendValidationRule;
 import uk.gov.hmcts.probate.validator.CheckListAmendCaseValidationRule;
+import uk.gov.hmcts.probate.validator.RedeclarationSoTValidationRule;
 import uk.gov.hmcts.probate.validator.ValidationRule;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,9 +42,9 @@ import java.util.Optional;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static uk.gov.hmcts.probate.model.DocumentType.LEGAL_STATEMENT_PROBATE;
 import static uk.gov.hmcts.probate.model.DocumentType.LEGAL_STATEMENT_ADMON;
 import static uk.gov.hmcts.probate.model.DocumentType.LEGAL_STATEMENT_INTESTACY;
+import static uk.gov.hmcts.probate.model.DocumentType.LEGAL_STATEMENT_PROBATE;
 import static uk.gov.hmcts.reform.probate.model.cases.grantofrepresentation.GrantType.Constants.ADMON_WILL_NAME;
 import static uk.gov.hmcts.reform.probate.model.cases.grantofrepresentation.GrantType.Constants.GRANT_OF_PROBATE_NAME;
 import static uk.gov.hmcts.reform.probate.model.cases.grantofrepresentation.GrantType.Constants.INTESTACY_NAME;
@@ -54,6 +56,7 @@ import static uk.gov.hmcts.reform.probate.model.cases.grantofrepresentation.Gran
 public class BusinessValidationController {
 
     private final EventValidationService eventValidationService;
+    private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
     private final List<ValidationRule> allValidationRules;
     private final List<CaseworkerAmendValidationRule> allCaseworkerAmendValidationRules;
@@ -62,8 +65,15 @@ public class BusinessValidationController {
     private final ConfirmationResponseService confirmationResponseService;
     private final StateChangeService stateChangeService;
     private final PDFManagementService pdfManagementService;
+    private final RedeclarationSoTValidationRule redeclarationSoTValidationRule;
+    private final CaseStoppedService caseStoppedService;
     private static final String DEFAULT_LOG_ERROR = "Case Id: {} ERROR: {}";
     private static final String INVALID_PAYLOAD = "Invalid payload";
+
+    @PostMapping(path = "/sols-apply-as-exec")
+    public ResponseEntity<CallbackResponse> setApplicantFieldsForSolsApplyAsExec(@RequestBody CallbackRequest request) {
+        return ResponseEntity.ok(callbackResponseTransformer.setApplicantFieldsForSolsApplyAsExec(request));
+    }
 
     @PostMapping(path = "/sols-validate", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CallbackResponse> solsValidate(
@@ -166,10 +176,32 @@ public class BusinessValidationController {
         return ResponseEntity.ok(response);
     }
 
+
+    @PostMapping(path = "/case-stopped", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<CallbackResponse> startDelayedNotificationPeriod(
+            @RequestBody CallbackRequest callbackRequest,
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+
+        logRequest(request.getRequestURI(), callbackRequest);
+
+        validateForPayloadErrors(callbackRequest, bindingResult);
+
+        log.info("case-stopped started");
+
+        caseStoppedService.caseStopped(callbackRequest.getCaseDetails());
+
+        CallbackResponse response = callbackResponseTransformer.transformCase(callbackRequest);
+        return ResponseEntity.ok(response);
+    }
+
+
     @PostMapping(path = "/resolveStop", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CallbackResponse> resolveStopState(@RequestBody CallbackRequest callbackRequest,
                                                              HttpServletRequest request) {
         logRequest(request.getRequestURI(), callbackRequest);
+
+        caseStoppedService.caseResolved(callbackRequest.getCaseDetails());
 
         CallbackResponse response = callbackResponseTransformer.resolveStop(callbackRequest);
         return ResponseEntity.ok(response);
@@ -186,13 +218,14 @@ public class BusinessValidationController {
         return ResponseEntity.ok(afterSubmitCallbackResponse);
     }
 
-    @PostMapping(path = "/transformCase", consumes = APPLICATION_JSON_UTF8_VALUE, produces = {APPLICATION_JSON_VALUE})
-    public ResponseEntity<CallbackResponse> transformCaseDetails(
+    @PostMapping(path = "/casePrinted", consumes = APPLICATION_JSON_UTF8_VALUE, produces = {APPLICATION_JSON_VALUE})
+    public ResponseEntity<CallbackResponse> casePrinted(
             @RequestBody CallbackRequest callbackRequest,
             BindingResult bindingResult) {
 
         validateForPayloadErrors(callbackRequest, bindingResult);
 
+        notificationService.startAwaitingDocumentationNotificationPeriod(callbackRequest.getCaseDetails());
         CallbackResponse response = callbackResponseTransformer.transformCase(callbackRequest);
 
         return ResponseEntity.ok(response);
@@ -208,6 +241,30 @@ public class BusinessValidationController {
         CallbackResponse response = callbackResponseTransformer.paperForm(callbackRequest);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(path = "/redeclarationComplete", consumes = APPLICATION_JSON_UTF8_VALUE, produces = {APPLICATION_JSON_VALUE})
+    public ResponseEntity<CallbackResponse> redeclarationComplete(
+            @RequestBody CallbackRequest callbackRequest) {
+        Optional<String> state = stateChangeService.getRedeclarationComplete(callbackRequest.getCaseDetails().getData());
+        return ResponseEntity.ok(callbackResponseTransformer.transformWithConditionalStateChange(callbackRequest, state));
+    }
+
+
+    @PostMapping(path = "/redeclarationSot", consumes = APPLICATION_JSON_UTF8_VALUE, produces = {APPLICATION_JSON_VALUE})
+    public ResponseEntity<CallbackResponse> redeclarationSot(
+            @RequestBody CallbackRequest callbackRequest) {
+
+        redeclarationSoTValidationRule.validate(callbackRequest.getCaseDetails());
+
+        return ResponseEntity.ok(callbackResponseTransformer.transform(callbackRequest));
+    }
+
+    @PostMapping(path = "/default-sols-next-steps", consumes = APPLICATION_JSON_UTF8_VALUE, produces = {APPLICATION_JSON_VALUE})
+    public ResponseEntity<CallbackResponse> defaulsSolicitorNextStepsForLegalStatementRegeneration(
+            @RequestBody CallbackRequest callbackRequest) {
+
+        return ResponseEntity.ok(callbackResponseTransformer.transformCaseForSolicitorLegalStatementRegeneration(callbackRequest));
     }
 
     private void validateForPayloadErrors(CallbackRequest callbackRequest, BindingResult bindingResult) {
@@ -232,7 +289,9 @@ public class BusinessValidationController {
     private void logRequest(String uri, CallbackRequest callbackRequest) {
         try {
             log.info("POST: {} Case Id: {} ", uri, callbackRequest.getCaseDetails().getId().toString());
-            log.debug("POST: {} {}", uri, objectMapper.writeValueAsString(callbackRequest));
+            if (log.isDebugEnabled()) {
+                log.debug("POST: {} {}", uri, objectMapper.writeValueAsString(callbackRequest));
+            }
         } catch (JsonProcessingException e) {
             log.error("POST: {}", uri, e);
         }

@@ -66,6 +66,16 @@
       },
       "caseType": "gop",
       "solsSolicitorEmail": "probBackosol@gmail.com",
+      "applicationGrounds": "Grounds for application",
+      "ukEstate": [
+        {
+          "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+          "value": {
+            "item": "item1",
+            "value": "1000"
+          }
+        }
+      ],
       "deceasedDomicileInEngWales": "Yes",
       "ihtNetValue": "800000",
       "deceasedSurname": "Deceased Last Name",
@@ -97,8 +107,13 @@
       "deceasedForenames": "Deceased First Name",
       "primaryApplicantIsApplying": "Yes",
       "primaryApplicantHasAlias": "No",
-      "solsPaymentReferenceNumber": "Cheque (payable to ‘HM Courts & Tribunals Service’)",
-      "solsSOTName": "name",
+      "solsSOTName": "Solicitor_fn Solicitor_ln",
+      "solsSOTForenames": "Solicitor_fn",
+      "solsSOTSurname": "Solicitor_ln",
+      "solsSolicitorIsExec": "No",
+      "solsSolicitorIsMainApplicant": null,
+      "solsSolicitorIsApplying": null,
+      "solsSolicitorNotApplyingReason": null,
       "ihtGrossValue": "1000000",
       "ihtFormId": "IHT205",
       "registryLocation": "Birmingham",
@@ -151,6 +166,19 @@
         }
       },
       "solsSolicitorEmail": "PUBLIC",
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
+      },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
       "deceasedSurname": "PUBLIC",
@@ -169,8 +197,13 @@
       "deceasedForenames": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "registryLocation": "PUBLIC",
@@ -220,6 +253,19 @@
         }
       },
       "solsSolicitorEmail": "PUBLIC",
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
+      },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
       "deceasedSurname": "PUBLIC",
@@ -238,8 +284,13 @@
       "deceasedForenames": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "solsSOTName": "PUBLIC",
+      "solsSOTForenames": "PUBLIC",
+      "solsSOTSurname": "PUBLIC",
+      "solsSolicitorIsExec": "PUBLIC",
+      "solsSolicitorIsMainApplicant": "PUBLIC",
+      "solsSolicitorIsApplying": "PUBLIC",
+      "solsSolicitorNotApplyingReason": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "registryLocation": "PUBLIC",
@@ -302,6 +353,16 @@
         "AddressLine3": ""
       },
       "solsSolicitorEmail": "probBackosol@gmail.com",
+      "applicationGrounds": "Grounds for application",
+      "ukEstate": [
+        {
+          "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+          "value": {
+            "item": "item1",
+            "value": "1000"
+          }
+        }
+      ],
       "deceasedDomicileInEngWales": "Yes",
       "ihtNetValue": "800000",
       "deceasedSurname": "Deceased Last Name",
@@ -322,7 +383,6 @@
       "deceasedForenames": "Deceased First Name",
       "primaryApplicantIsApplying": "Yes",
       "primaryApplicantHasAlias": "No",
-      "solsPaymentReferenceNumber": "Cheque (payable to ‘HM Courts & Tribunals Service’)",
       "ihtGrossValue": "1000000",
       "ihtFormId": "IHT205",
       "registryLocation": "Birmingham",
@@ -365,6 +425,19 @@
         "classification": "PUBLIC"
       },
       "solsSolicitorEmail": "PUBLIC",
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
+      },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
       "deceasedSurname": "PUBLIC",
@@ -381,7 +454,6 @@
       "deceasedForenames": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "registryLocation": "PUBLIC",
@@ -427,6 +499,19 @@
         "classification": "PUBLIC"
       },
       "solsSolicitorEmail": "PUBLIC",
+      "applicationGrounds": "PUBLIC",
+      "ukEstate": {
+        "classification": "PUBLIC",
+        "value": [
+          {
+            "id": "5922cd88-3704-998e-cc30-8ae3bccbdf45",
+            "value": {
+              "item": "PUBLIC",
+              "value": "PUBLIC"
+            }
+          }
+        ]
+      },
       "deceasedDomicileInEngWales": "PUBLIC",
       "ihtNetValue": "PUBLIC",
       "deceasedSurname": "PUBLIC",
@@ -443,7 +528,6 @@
       "deceasedForenames": "PUBLIC",
       "primaryApplicantIsApplying": "PUBLIC",
       "primaryApplicantHasAlias": "PUBLIC",
-      "solsPaymentReferenceNumber": "PUBLIC",
       "ihtGrossValue": "PUBLIC",
       "ihtFormId": "PUBLIC",
       "registryLocation": "PUBLIC",

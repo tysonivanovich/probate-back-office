@@ -8,9 +8,16 @@
     "security_classification": "PUBLIC",
     "case_data": {
       "solsPaymentMethods": "card",
-      "solsSOTName": "name",
+      "solsSOTName": "Solicitor_fn Solicitor_ln",
+      "solsSOTForenames": "Solicitor_fn",
+      "solsSOTSurname": "Solicitor_ln",
+      "solsSolicitorIsExec": "No",
+      "solsSolicitorIsMainApplicant": null,
+      "solsSolicitorIsApplying": null,
+      "solsSolicitorNotApplyingReason": null,
       "solsSOTJobTitle": "job title",
       "otherExecutorExists": "Yes",
+      "applicationGrounds": "Grounds for application",
       "deceasedAddress": {
         "AddressLine1": "1",
         "AddressLine2": "1",

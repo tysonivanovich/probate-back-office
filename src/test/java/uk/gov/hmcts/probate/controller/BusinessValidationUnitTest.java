@@ -1,6 +1,5 @@
 package uk.gov.hmcts.probate.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,22 +14,22 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import uk.gov.hmcts.probate.exception.BadRequestException;
 import uk.gov.hmcts.probate.exception.model.FieldErrorResponse;
-import uk.gov.hmcts.probate.model.ccd.CCDData;
 import uk.gov.hmcts.probate.model.ccd.raw.Document;
 import uk.gov.hmcts.probate.model.ccd.raw.request.CallbackRequest;
 import uk.gov.hmcts.probate.model.ccd.raw.request.CaseData;
 import uk.gov.hmcts.probate.model.ccd.raw.request.CaseDetails;
 import uk.gov.hmcts.probate.model.ccd.raw.response.AfterSubmitCallbackResponse;
 import uk.gov.hmcts.probate.model.ccd.raw.response.CallbackResponse;
+import uk.gov.hmcts.probate.service.CaseStoppedService;
 import uk.gov.hmcts.probate.service.ConfirmationResponseService;
 import uk.gov.hmcts.probate.service.EventValidationService;
+import uk.gov.hmcts.probate.service.NotificationService;
 import uk.gov.hmcts.probate.service.StateChangeService;
 import uk.gov.hmcts.probate.service.template.pdf.PDFManagementService;
-import uk.gov.hmcts.probate.transformer.CCDDataTransformer;
 import uk.gov.hmcts.probate.transformer.CallbackResponseTransformer;
 import uk.gov.hmcts.probate.validator.CaseworkerAmendValidationRule;
 import uk.gov.hmcts.probate.validator.CheckListAmendCaseValidationRule;
-import uk.gov.hmcts.probate.validator.EmailAddressNotificationValidationRule;
+import uk.gov.hmcts.probate.validator.RedeclarationSoTValidationRule;
 import uk.gov.hmcts.probate.validator.ValidationRule;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,9 +51,9 @@ public class BusinessValidationUnitTest {
     @Mock
     private EventValidationService eventValidationServiceMock;
     @Mock
-    private ObjectMapper objectMapper;
+    private NotificationService notificationService;
     @Mock
-    private CCDDataTransformer ccdBeanTransformer;
+    private ObjectMapper objectMapper;
     @Mock
     private CallbackRequest callbackRequestMock;
     @Mock
@@ -76,8 +75,6 @@ public class BusinessValidationUnitTest {
     @Mock
     private List<CheckListAmendCaseValidationRule> checkListAmendCaseValidationRules;
     @Mock
-    private List<EmailAddressNotificationValidationRule> emailAddressNotificationValidationRules;
-    @Mock
     private CallbackResponseTransformer callbackResponseTransformerMock;
     @Mock
     private CallbackResponse callbackResponseMock;
@@ -87,23 +84,26 @@ public class BusinessValidationUnitTest {
     private AfterSubmitCallbackResponse afterSubmitCallbackResponseMock;
     @Mock
     private StateChangeService stateChangeServiceMock;
+    @Mock
+    private RedeclarationSoTValidationRule redeclarationSoTValidationRuleMock;
 
     private FieldErrorResponse businessValidationErrorMock;
     @Mock
     private PDFManagementService pdfManagementServiceMock;
     @Mock
-    private JsonProcessingException jsonProcessingException;
+    private CaseStoppedService  caseStoppedServiceMock;
 
 
     private BusinessValidationController underTest;
 
-    private static Optional<String> STATE_GRANT_TYPE_PROBATE;
+    private static Optional<String> STATE_GRANT_TYPE_PROBATE = Optional.of("SolProbateCreated");
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         businessValidationErrorMock = FieldErrorResponse.builder().build();
         underTest = new BusinessValidationController(eventValidationServiceMock,
+                notificationService,
                 objectMapper,
                 validationRules,
                 caseworkerAmendValidationRules,
@@ -111,9 +111,23 @@ public class BusinessValidationUnitTest {
                 callbackResponseTransformerMock,
                 confirmationResponseServiceMock,
                 stateChangeServiceMock,
-                pdfManagementServiceMock);
+                pdfManagementServiceMock,
+                redeclarationSoTValidationRuleMock,
+                caseStoppedServiceMock);
 
         when(httpServletRequest.getRequestURI()).thenReturn("/test-uri");
+    }
+
+    @Test
+    public void shouldValidateSolsApplyAsExecWithNoErrors() {
+        when(callbackResponseTransformerMock.setApplicantFieldsForSolsApplyAsExec(callbackRequestMock))
+                .thenReturn(callbackResponseMock);
+
+        ResponseEntity<CallbackResponse> response = underTest.setApplicantFieldsForSolsApplyAsExec(callbackRequestMock);
+
+        assertThat(response.getBody(), is(callbackResponseMock));
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody().getErrors().isEmpty(), is(true));
     }
 
     @Test
@@ -267,24 +281,6 @@ public class BusinessValidationUnitTest {
         assertThat(response.getBody().getErrors().isEmpty(), is(true));
     }
 
-    @Test
-    public void shouldErrorForLogRequest() throws JsonProcessingException {
-        when(objectMapper.writeValueAsString(callbackRequestMock)).thenThrow(jsonProcessingException);
-
-        when(bindingResultMock.hasErrors()).thenReturn(false);
-        when(callbackRequestMock.getCaseDetails()).thenReturn(caseDetailsMock);
-        when(caseDetailsMock.getData()).thenReturn(caseDataMock);
-        when(eventValidationServiceMock.validateRequest(callbackRequestMock, validationRules)).thenReturn(callbackResponseMock);
-        when(stateChangeServiceMock.getChangedStateForGrantType(caseDataMock)).thenReturn(STATE_GRANT_TYPE_PROBATE);
-        when(callbackResponseTransformerMock.transformWithConditionalStateChange(callbackRequestMock, STATE_GRANT_TYPE_PROBATE))
-                .thenReturn(callbackResponseMock);
-
-        ResponseEntity<CallbackResponse> response = underTest.solsValidate(callbackRequestMock,
-                bindingResultMock, httpServletRequest);
-
-        assertThat(response.getStatusCode(), is(HttpStatus.OK));
-    }
-
     @Test(expected = BadRequestException.class)
     public void shouldValidateWithFieldErrors() {
         when(bindingResultMock.hasErrors()).thenReturn(true);
@@ -394,7 +390,7 @@ public class BusinessValidationUnitTest {
         when(bindingResultMock.getFieldErrors()).thenReturn(Collections.singletonList(fieldErrorMock));
         when(callbackRequestMock.getCaseDetails()).thenReturn(caseDetailsMock);
 
-        ResponseEntity<CallbackResponse> response = underTest.transformCaseDetails(callbackRequestMock,
+        ResponseEntity<CallbackResponse> response = underTest.casePrinted(callbackRequestMock,
                 bindingResultMock);
 
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
@@ -407,7 +403,7 @@ public class BusinessValidationUnitTest {
         when(callbackResponseTransformerMock.transformCase(callbackRequestMock))
                 .thenReturn(callbackResponseMock);
 
-        ResponseEntity<CallbackResponse> response = underTest.transformCaseDetails(callbackRequestMock,
+        ResponseEntity<CallbackResponse> response = underTest.casePrinted(callbackRequestMock,
                 bindingResultMock);
 
         assertThat(response.getStatusCode(), is(HttpStatus.OK));

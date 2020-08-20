@@ -27,12 +27,6 @@ public class HealthConfiguration {
     @Value("${evidence.management.host}")
     private String evidenceManagementHost;
 
-    @Value("${printservice.internal.host}")
-    private String printServiceInternalHost;
-
-    @Value("${ccd.gateway.host}")
-    private String ccdGatewayHost;
-
     @Value("${core_case_data.api.url}")
     private String ccdApiUrl;
 
@@ -54,16 +48,6 @@ public class HealthConfiguration {
     @Bean
     public SolsHealthIndicator evidenceManagementHealthIndicator() {
         return new SolsHealthIndicator(evidenceManagementHost, restTemplate, HEALTH_ENDPOINT);
-    }
-
-    @Bean
-    public SolsHealthIndicator printServiceHealthIndicator() {
-        return new SolsHealthIndicator(printServiceInternalHost, restTemplate, HEALTH_ENDPOINT);
-    }
-
-    @Bean
-    public SolsHealthIndicator ccdGatewayHealthIndicator() {
-        return new SolsHealthIndicator(ccdGatewayHost, restTemplate, HEALTH_ENDPOINT);
     }
 
     @Bean

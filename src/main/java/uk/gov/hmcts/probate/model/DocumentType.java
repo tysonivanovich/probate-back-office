@@ -68,8 +68,17 @@ public enum DocumentType {
     @JsonProperty("caveatRaised")
     CAVEAT_RAISED("caveatRaised"),
 
+    @JsonProperty("grantRaised")
+    GRANT_RAISED("grantRaised"),
+
     @JsonProperty("caveatStopped")
     CAVEAT_STOPPED("caveatStopped"),
+
+    @JsonProperty("caveatExtended")
+    CAVEAT_EXTENDED("caveatExtended"),
+
+    @JsonProperty("caveatWithdrawn")
+    CAVEAT_WITHDRAWN("caveatWithdrawn"),
 
     @JsonProperty("grantCoversheet")
     GRANT_COVERSHEET("grantCoversheet"),
@@ -90,7 +99,37 @@ public enum DocumentType {
     INTESTACY_GRANT_REISSUE("intestacyGrantReissue"),
 
     @JsonProperty("admonWillGrantReissue")
-    ADMON_WILL_GRANT_REISSUE("admonWillGrantReissue");
+    ADMON_WILL_GRANT_REISSUE("admonWillGrantReissue"),
+
+    @JsonProperty("sotInformationRequest")
+    SOT_INFORMATION_REQUEST("sotInformationRequest"),
+
+    @JsonProperty("statementOfTruth")
+    STATEMENT_OF_TRUTH("statementOfTruth"),
+
+    @JsonProperty("welshStatementOfTruth")
+    WELSH_STATEMENT_OF_TRUTH("welshStatementOfTruth"),
+
+    @JsonProperty("assembledLetter")
+    ASSEMBLED_LETTER("assembledLetter"),
+
+    @JsonProperty("welshDigitalGrantDraft")
+    WELSH_DIGITAL_GRANT_DRAFT("welshDigitalGrantDraft"),
+
+    @JsonProperty("welshDigitalGrant")
+    WELSH_DIGITAL_GRANT("welshDigitalGrant"),
+
+    @JsonProperty("welshAdmonWillGrantDraft")
+    WELSH_ADMON_WILL_GRANT_DRAFT("welshAdmonWillGrantDraft"),
+
+    @JsonProperty("welshAdmonWillGrant")
+    WELSH_ADMON_WILL_GRANT("welshAdmonWillGrant"),
+
+    @JsonProperty("welshIntestacyGrantDraft")
+    WELSH_INTESTACY_GRANT_DRAFT("welshIntestacyGrantDraft"),
+
+    @JsonProperty("welshIntestacyGrant")
+    WELSH_INTESTACY_GRANT("welshIntestacyGrant");
 
     private final String templateName;
 

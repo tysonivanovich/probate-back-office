@@ -1,18 +1,21 @@
 package uk.gov.hmcts.probate.model.ccd.raw.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import uk.gov.hmcts.probate.controller.validation.AmendCaseDetailsGroup;
+import uk.gov.hmcts.probate.controller.validation.ApplicationAdmonGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationCreatedGroup;
+import uk.gov.hmcts.probate.controller.validation.ApplicationIntestacyGroup;
+import uk.gov.hmcts.probate.controller.validation.ApplicationProbateGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationReviewedGroup;
 import uk.gov.hmcts.probate.controller.validation.ApplicationUpdatedGroup;
-import uk.gov.hmcts.probate.controller.validation.ApplicationProbateGroup;
-import uk.gov.hmcts.probate.controller.validation.ApplicationIntestacyGroup;
-import uk.gov.hmcts.probate.controller.validation.ApplicationAdmonGroup;
 import uk.gov.hmcts.probate.controller.validation.NextStepsConfirmationGroup;
 import uk.gov.hmcts.probate.model.ApplicationType;
+import uk.gov.hmcts.probate.model.ExecutorsApplyingNotification;
+import uk.gov.hmcts.probate.model.LanguagePreference;
 import uk.gov.hmcts.probate.model.ccd.CaseMatch;
 import uk.gov.hmcts.probate.model.ccd.Reissue;
 import uk.gov.hmcts.probate.model.ccd.raw.AdditionalExecutor;
@@ -22,12 +25,15 @@ import uk.gov.hmcts.probate.model.ccd.raw.AdoptedRelative;
 import uk.gov.hmcts.probate.model.ccd.raw.AliasName;
 import uk.gov.hmcts.probate.model.ccd.raw.AttorneyApplyingOnBehalfOf;
 import uk.gov.hmcts.probate.model.ccd.raw.BulkPrint;
+import uk.gov.hmcts.probate.model.ccd.raw.Categories;
 import uk.gov.hmcts.probate.model.ccd.raw.CollectionMember;
 import uk.gov.hmcts.probate.model.ccd.raw.Declaration;
 import uk.gov.hmcts.probate.model.ccd.raw.Document;
 import uk.gov.hmcts.probate.model.ccd.raw.DocumentLink;
+import uk.gov.hmcts.probate.model.ccd.raw.DynamicList;
 import uk.gov.hmcts.probate.model.ccd.raw.EstateItem;
 import uk.gov.hmcts.probate.model.ccd.raw.LegalStatement;
+import uk.gov.hmcts.probate.model.ccd.raw.ParagraphDetail;
 import uk.gov.hmcts.probate.model.ccd.raw.Payment;
 import uk.gov.hmcts.probate.model.ccd.raw.ProbateAliasName;
 import uk.gov.hmcts.probate.model.ccd.raw.ScannedDocument;
@@ -45,6 +51,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +60,7 @@ import java.util.stream.Collectors;
 import static uk.gov.hmcts.probate.model.Constants.NO;
 import static uk.gov.hmcts.probate.model.Constants.YES;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 @Data
 public class CaseData {
@@ -72,7 +80,31 @@ public class CaseData {
 
     private final String solsSolicitorPhoneNumber;
 
+    @NotBlank(groups = {ApplicationCreatedGroup.class}, message = "{solsSolicitorIsExecIsNull}")
+    private final String solsSolicitorIsExec;
+
+    private final String solsSolicitorIsMainApplicant;
+
+    private final String solsSolicitorIsApplying;
+
+    private final String solsSolicitorNotApplyingReason;
+
     // EVENT = solicitorUpdateApplication
+    private final String willDispose;
+
+    private final String englishWill;
+
+    private final String appointExec;
+
+    private final String appointExecByDuties;
+
+    private final String appointExecNo;
+
+    private final String immovableEstate;
+
+    @NotBlank(groups = {ApplicationUpdatedGroup.class}, message = "{applicationGroundsIsNull}")
+    private final String applicationGrounds;
+
     @NotBlank(groups = {ApplicationUpdatedGroup.class, AmendCaseDetailsGroup.class},
             message = "{deceasedForenameIsNull}")
     private final String deceasedForenames;
@@ -119,9 +151,9 @@ public class CaseData {
     private final BigDecimal ihtGrossValue;
 
     @NotBlank(groups = {ApplicationUpdatedGroup.class,
-                        ApplicationProbateGroup.class,
-                        ApplicationIntestacyGroup.class,
-                        ApplicationAdmonGroup.class}, message = "{solsWillTypeIsNull}")
+            ApplicationProbateGroup.class,
+            ApplicationIntestacyGroup.class,
+            ApplicationAdmonGroup.class}, message = "{solsWillTypeIsNull}")
     private final String solsWillType;
 
     // EVENT = solicitorUpdateProbate and Admon
@@ -129,7 +161,7 @@ public class CaseData {
     private final String willAccessOriginal;
 
     @NotBlank(groups = {ApplicationProbateGroup.class,
-                        ApplicationAdmonGroup.class}, message = "{willNumberOfCodicilsIsNull}")
+            ApplicationAdmonGroup.class}, message = "{willNumberOfCodicilsIsNull}")
     private final String willHasCodicils;
 
     private final String willNumberOfCodicils;
@@ -162,18 +194,17 @@ public class CaseData {
     private final String solsExecutorAliasNames;
 
     @NotBlank(groups = {ApplicationProbateGroup.class,
-                        ApplicationIntestacyGroup.class}, message = "{primaryApplicantIsApplyingIsNull}")
+            ApplicationIntestacyGroup.class}, message = "{primaryApplicantIsApplyingIsNull}")
     private final String primaryApplicantIsApplying;
 
     private final String solsPrimaryExecutorNotApplyingReason;
 
-    @NotNull(groups = {ApplicationProbateGroup.class,
-                       ApplicationAdmonGroup.class,
-                       ApplicationIntestacyGroup.class}, message = "{primaryApplicantAddressIsNull}")
+    @NotNull(groups = {ApplicationAdmonGroup.class,
+            ApplicationIntestacyGroup.class}, message = "{primaryApplicantAddressIsNull}")
     private final SolsAddress primaryApplicantAddress;
 
     @NotBlank(groups = {ApplicationAdmonGroup.class,
-                        ApplicationIntestacyGroup.class}, message = "{primaryApplicantEmailAddressIsNull}")
+            ApplicationIntestacyGroup.class}, message = "{primaryApplicantEmailAddressIsNull}")
     private final String primaryApplicantEmailAddress;
 
     @NotBlank(groups = {ApplicationProbateGroup.class}, message = "{otherExecutorExistsIsNull}")
@@ -185,8 +216,8 @@ public class CaseData {
 
     // EVENT = solicitorUpdateIntestacy
     @NotBlank(groups = {ApplicationProbateGroup.class,
-                        ApplicationAdmonGroup.class,
-                        ApplicationIntestacyGroup.class}, message = "{willExistsIsNull}")
+            ApplicationAdmonGroup.class,
+            ApplicationIntestacyGroup.class}, message = "{willExistsIsNull}")
     private final String willExists;
 
     @NotNull(groups = {ApplicationIntestacyGroup.class}, message = "{deceasedMaritalStatusIsNull}")
@@ -205,6 +236,24 @@ public class CaseData {
     @NotBlank(groups = {ApplicationIntestacyGroup.class}, message = "{solsApplicantSiblingsIsNull}")
     private final String solsApplicantSiblings;
 
+    private final String boEmailDocsReceivedNotificationRequested;
+
+    @SuppressWarnings("squid:S1170")
+    @Getter(lazy = true)
+    private final String boEmailDocsReceivedNotification = getDefaultValueForEmailNotifications();
+
+    private final String boEmailGrantIssuedNotificationRequested;
+
+    @SuppressWarnings("squid:S1170")
+    @Getter(lazy = true)
+    private final String boEmailGrantIssuedNotification = getDefaultValueForEmailNotifications();
+
+    @SuppressWarnings("squid:S1170")
+    @Getter(lazy = true)
+    private final String boSendToBulkPrint = YES;
+
+    private final String boSendToBulkPrintRequested;
+
     //EVENT = review
     private final DocumentLink solsLegalStatementDocument;
 
@@ -221,8 +270,13 @@ public class CaseData {
     @NotNull(groups = {ApplicationReviewedGroup.class}, message = "{solsSOTNeedToUpdateIsNull}")
     private final String solsSOTNeedToUpdate;
 
-    @NotBlank(groups = {ApplicationReviewedGroup.class}, message = "{solsSOTNameIsNull}")
     private final String solsSOTName;
+
+    @NotBlank(groups = {ApplicationReviewedGroup.class}, message = "{solsSOTForenamesIsNull}")
+    private final String solsSOTForenames;
+
+    @NotBlank(groups = {ApplicationReviewedGroup.class}, message = "{solsSOTSurnameIsNull}")
+    private final String solsSOTSurname;
 
     @NotBlank(groups = {ApplicationReviewedGroup.class}, message = "{solsSOTJobTitleIsNull}")
     private final String solsSOTJobTitle;
@@ -315,6 +369,8 @@ public class CaseData {
 
     private final String paperForm;
 
+    private final String languagePreferenceWelsh;
+
     private final String primaryApplicantAlias;
 
     private final String primaryApplicantAliasReason;
@@ -322,25 +378,6 @@ public class CaseData {
     private final String primaryApplicantOtherReason;
 
     private final String primaryApplicantSameWillName;
-
-    private final String boEmailDocsReceivedNotificationRequested;
-
-    @SuppressWarnings("squid:S1170")
-    @Getter(lazy = true)
-    private final String boEmailDocsReceivedNotification = getDefaultValueForEmailNotifications();
-
-    private final String boEmailGrantIssuedNotificationRequested;
-
-    @SuppressWarnings("squid:S1170")
-    @Getter(lazy = true)
-    private final String boEmailGrantIssuedNotification = getDefaultValueForEmailNotifications();
-
-    @SuppressWarnings("squid:S1170")
-    @Getter(lazy = true)
-    private final String boSendToBulkPrint = YES;
-
-    private final String boSendToBulkPrintRequested;
-
 
     //paper form case creator fields
     private final String primaryApplicantSecondPhoneNumber;
@@ -360,7 +397,7 @@ public class CaseData {
     private final String epaOrLpa;
     private final String epaRegistered;
     private final String domicilityCountry;
-    private final List<CollectionMember<EstateItem>> ukEstateItems;
+    private final List<CollectionMember<EstateItem>> ukEstate;
     private final String domicilityIHTCert;
     private final String entitledToApply;
     private final String entitledToApplyOther;
@@ -437,6 +474,8 @@ public class CaseData {
     private final String reissueDate;
     private final String reissueReasonNotation;
     private final String latestGrantReissueDate;
+    private final String boStopDetailsDeclarationParagraph;
+    private final List<CollectionMember<ExecutorsApplyingNotification>> executorsApplyingNotifications;
 
     private final List<CollectionMember<CaseMatch>> legacySearchResultRows;
 
@@ -486,11 +525,63 @@ public class CaseData {
     private final String deceasedAnyChildren;
     private final String deceasedHasAssetsOutsideUK;
 
+    private final String boEmailRequestInfoNotificationRequested;
+
+    private final List<CollectionMember<Document>> probateSotDocumentsGenerated = new ArrayList<>();
+
+    private final Categories categories;
+    private final DocumentLink previewLink;
+    @Builder.Default
+    private List<CollectionMember<ParagraphDetail>> paragraphDetails = new ArrayList<>();
+    private String bulkScanCaseReference;
+
+    @SuppressWarnings("squid:S1170")
+    @Getter(lazy = true)
+    private final String boEmailRequestInfoNotification = getDefaultValueForEmailNotifications();
+
+    @Getter(lazy = true)
+    private final String boRequestInfoSendToBulkPrint = YES;
+
+    private final String boRequestInfoSendToBulkPrintRequested;
+
+    @Getter(lazy = true)
+    private final String boAssembleLetterSendToBulkPrint = YES;
+
+    private final String boAssembleLetterSendToBulkPrintRequested;
+
+    private LocalDate grantDelayedNotificationDate;
+    private LocalDate grantStoppedDate;
+    private String grantDelayedNotificationIdentified;
+    private String grantDelayedNotificationSent;
+    private LocalDate grantAwaitingDocumentationNotificationDate;
+    private String grantAwaitingDocumentatioNotificationSent;
+    private String pcqId;
+    
+    private DynamicList reprintDocument;
+    private String reprintNumberOfCopies;
+    
+    private DynamicList solsAmendLegalStatmentSelect;
+
+    private String declarationCheckbox;
+    private String ihtGrossValueField;
+    private String ihtNetValueField;
+    private Long numberOfExecutors;
+    private Long numberOfApplicants;
+    private String legalDeclarationJson;
+    private String checkAnswersSummaryJson;
+    private String registryAddress;
+    private String registryEmailAddress;
+    private String registrySequenceNumber;
+
     @Getter(lazy = true)
     private final List<CollectionMember<AdditionalExecutor>> executorsApplyingForLegalStatement = getAllExecutors(true);
 
     @Getter(lazy = true)
     private final List<CollectionMember<AdditionalExecutor>> executorsNotApplyingForLegalStatement = getAllExecutors(false);
+
+    public String solicitorIsMainApplicant() {
+        return YES.equals(solsSolicitorIsMainApplicant) ? YES : NO;
+    }
 
     public boolean isPrimaryApplicantApplying() {
         return YES.equals(primaryApplicantIsApplying);
@@ -518,11 +609,121 @@ public class CaseData {
             totalExecutors.add(primaryAdditionalExecutors);
         }
 
-        if (getSolsAdditionalExecutorList() != null) {
+        if (YES.equals(getOtherExecutorExists()) && getSolsAdditionalExecutorList() != null) {
             totalExecutors.addAll(getSolsAdditionalExecutorList());
         }
 
+        if (!isSolicitorCreatedGrant(getSolsWillType())) {
+            if (additionalExecutorsApplying != null) {
+                totalExecutors.addAll(mapAdditionalExecutorsApplying(getAdditionalExecutorsApplying()));
+            }
+
+            if (additionalExecutorsNotApplying != null) {
+                totalExecutors.addAll(mapAdditionalExecutorsNotApplying(getAdditionalExecutorsNotApplying()));
+            }
+        }
+
         return totalExecutors.stream().filter(ex -> isApplying(ex, applying)).collect(Collectors.toList());
+    }
+
+    private boolean isSolicitorCreatedGrant(String solsWillType) {
+        return (solsWillType != null && solsFeeAccountNumber == null);
+    }
+
+    private List<CollectionMember<AdditionalExecutor>> mapAdditionalExecutorsApplying(List<CollectionMember<AdditionalExecutorApplying>> additionalExecutors) {
+        AdditionalExecutorApplying exec;
+        AdditionalExecutor newExec;
+        CollectionMember<AdditionalExecutor> newAdditionalExecutor;
+        List<CollectionMember<AdditionalExecutor>> newAdditionalExecutors = new ArrayList<>();
+
+        for (CollectionMember<AdditionalExecutorApplying> e : additionalExecutors) {
+            exec = e.getValue();
+
+            if(exec == null) {
+                continue;
+            }
+
+            String forenames = exec.getApplyingExecutorFirstName();
+            String surname = exec.getApplyingExecutorLastName();
+
+            if (exec.getApplyingExecutorFirstName() == null || exec.getApplyingExecutorLastName() == null) {
+                List<String> names = splitFullname(exec.getApplyingExecutorName());
+
+                if(names.size() > 2) {
+                    surname = names.remove(names.size()-1);
+                    forenames = String.join(" ", names);
+                } else if(names.size() == 1) {
+                    forenames = names.get(0);
+                } else {
+                    surname = names.get(1);
+                    forenames = names.get(0);
+                }
+            }
+
+            newExec = AdditionalExecutor.builder()
+                    .additionalExecForenames(forenames)
+                    .additionalExecLastname(surname)
+                    .additionalApplying(YES)
+                    .additionalExecAddress(exec.getApplyingExecutorAddress())
+                    .additionalExecNameOnWill(exec.getApplyingExecutorOtherNames() == null ? NO : YES)
+                    .additionalExecAliasNameOnWill(exec.getApplyingExecutorOtherNames())
+                    .additionalExecReasonNotApplying(null)
+                    .build();
+            newAdditionalExecutor = new CollectionMember<>(e.getId(), newExec);
+            newAdditionalExecutors.add(newAdditionalExecutor);
+        }
+
+        return newAdditionalExecutors;
+    }
+
+    private List<CollectionMember<AdditionalExecutor>> mapAdditionalExecutorsNotApplying(List<CollectionMember<AdditionalExecutorNotApplying>> additionalExecutors) {
+        AdditionalExecutorNotApplying exec;
+        AdditionalExecutor newExec;
+        CollectionMember<AdditionalExecutor> newAdditionalExecutor;
+        List<CollectionMember<AdditionalExecutor>> newAdditionalExecutors = new ArrayList<>();
+
+        for (CollectionMember<AdditionalExecutorNotApplying> e : additionalExecutors) {
+            exec = e.getValue();
+
+            if(exec == null) {
+                continue;
+            }
+
+            String forenames = null;
+            String surname = null;
+
+            if(exec.getNotApplyingExecutorName() != null) {
+                List<String> names = splitFullname(exec.getNotApplyingExecutorName());
+
+                if(names.size() > 2) {
+                    surname = names.remove(names.size()-1);
+                    forenames = String.join(" ", names);
+                } else if(names.size() == 1) {
+                    forenames = names.get(0);
+                } else {
+                    surname = names.get(1);
+                    forenames = names.get(0);
+                }
+            }
+
+            newExec = AdditionalExecutor.builder()
+                    .additionalExecForenames(forenames)
+                    .additionalExecLastname(surname)
+                    .additionalApplying(NO)
+                    .additionalExecAddress(null)
+                    .additionalExecNameOnWill(exec.getNotApplyingExecutorNameOnWill() == null ? NO : YES)
+                    .additionalExecAliasNameOnWill(exec.getNotApplyingExecutorNameOnWill())
+                    .additionalExecReasonNotApplying(exec.getNotApplyingExecutorReason())
+                    .build();
+            newAdditionalExecutor = new CollectionMember<>(e.getId(), newExec);
+            newAdditionalExecutors.add(newAdditionalExecutor);
+        }
+
+        return newAdditionalExecutors;
+    }
+
+    private List<String> splitFullname(String fullName) {
+        return new ArrayList<>(Arrays.asList(fullName.split(" ")));
     }
 
     private boolean isApplying(CollectionMember<AdditionalExecutor> ex, boolean applying) {
@@ -542,7 +743,8 @@ public class CaseData {
     }
 
     public String getDefaultValueForEmailNotifications() {
-        return primaryApplicantEmailAddress == null && solsSolicitorEmail == null ? NO : YES;
+        return (primaryApplicantEmailAddress == null || primaryApplicantEmailAddress.isEmpty())
+                && (solsSolicitorEmail == null || solsSolicitorEmail.isEmpty()) ? NO : YES;
     }
 
     public String getDefaultValueForCaveatStopEmailNotification() {
@@ -581,6 +783,26 @@ public class CaseData {
         return YES.equals(getBoCaveatStopSendToBulkPrint());
     }
 
+    public boolean isBoEmailRequestInfoNotificationRequested() {
+        return YES.equals(getBoEmailRequestInfoNotification());
+    }
+
+    public boolean isBoRequestInfoSendToBulkPrintRequested() {
+        return YES.equals(getBoRequestInfoSendToBulkPrint());
+    }
+
+    public boolean isBoAssembleLetterSendToBulkPrintRequested() {
+        return YES.equals(getBoAssembleLetterSendToBulkPrint());
+    }
+
+    public LanguagePreference getLanguagePreference() {
+        return getLanguagePreferenceWelsh() != null && YES.equals(getLanguagePreferenceWelsh()) ? LanguagePreference.WELSH : LanguagePreference.ENGLISH;
+    }
+
+    public boolean isLanguagePreferenceWelsh() {
+        return YES.equals(getLanguagePreferenceWelsh());
+    }
+
     private String convertDate(LocalDate dateToConvert) {
         if (dateToConvert == null) {
             return null;
@@ -613,4 +835,5 @@ public class CaseData {
             return null;
         }
     }
+
 }
