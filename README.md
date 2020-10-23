@@ -12,7 +12,7 @@ simply use this one as a starting point and build on top of it.
 
 ## What's inside
 
-The template is a working application with a minimal setup. It contains:
+The template is a working application with a minimal setup. It contains: 
  * application skeleton
  * common plugins and libraries
  * docker setup
