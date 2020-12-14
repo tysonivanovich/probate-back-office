@@ -94,38 +94,42 @@ To build the project execute the following command:
   ./gradlew build
 ```
 
-## Minimal docker development environment
+## Docker environment
 
-##### 1) Install jq
+Because the probate back office relies on CCD callbacks it must be run inside the docker-compose environment, and must be built before bringing the environment up. You will need to recompile after any code changes.
 
-```bash
-sudo apt-get install jq
+Build the jar with:
+
+```
+./gradlew assemble
+docker-compose build
 ```
 
-For mac 
-```bash
-brew install jq
+Bring up the environment: 
+
 ```
 
-##### 2) Login to azure
+# build the jar
+./gradlew assemble
 
-```bash
-az login
-az acr login --name hmctspublic --subscription DCD-CNP-Prod
-az acr login --name hmctsprivate --subscription DCD-CNP-Prod
+# first time only
+npx @hmcts/probate-dev-env --create
+
+# spin up the docker containers
+npx @hmcts/probate-dev-env
+
+# use local probate backoffice
+docker-compose stop probate-back-office
+./gradlew assemble
+docker-compose up -d --build probate-back-office
+
 ```
 
-##### 3) Start docker containers
+If you would like to test a new CCD config locally, you should run:
 
-```bash
-./bin/dev.sh
 ```
-
-If the functional tests fail the first time, restart docker and boot it up again:
-
-```bash
-docker stop $(docker ps -a -q);
-./bin/dev.sh
+./ccdImports/conversionScripts/createAllXLS.sh probate-back-office:4104
+./ccdImports/conversionScripts/importAllXLS.sh
 ```
 
 ## Full setup
@@ -245,7 +249,7 @@ For mac
 
 For linux (replace ip with your own ip)
 ```bash
-   ./ccdImports/conversionScripts/createAllXLS.sh $MY_IP:4104 
+   ./ccdImports/conversionScripts/createAllXLS.sh probate-back-office:4104 
 ```
 The xls generation adds a empty Banner tab for each case type, which will not load using the /import scrips. Remove this tab from any/all xls file before importing it
 
